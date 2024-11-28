@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
@@ -22,16 +24,21 @@ class _MyAppState extends State<MyApp> {
   String _msj = '';
   bool connected = false;
   List<BluetoothInfo> items = [];
-  List<String> _options = ["permission bluetooth granted", "bluetooth enabled", "connection status", "update info"];
+  List<String> _options = [
+    "permission bluetooth granted",
+    "bluetooth enabled",
+    "connection status",
+    "update info"
+  ];
 
   String _selectSize = "2";
   final _txtText = TextEditingController(text: "Hello developer");
   bool _progress = false;
   String _msjprogress = "";
 
-  String optionprinttype = "58 mm";
+  String optionprinttype = "80 mm";
   List<String> options = ["58 mm", "80 mm"];
-
+  final _localKey = GlobalKey();
   @override
   void initState() {
     super.initState();
@@ -55,7 +62,8 @@ class _MyAppState extends State<MyApp> {
               onSelected: (Object select) async {
                 String sel = select as String;
                 if (sel == "permission bluetooth granted") {
-                  bool status = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+                  bool status =
+                      await PrintBluetoothThermal.isPermissionBluetoothGranted;
                   setState(() {
                     _info = "permission bluetooth granted: $status";
                   });
@@ -68,7 +76,8 @@ class _MyAppState extends State<MyApp> {
                 } else if (sel == "update info") {
                   initPlatformState();
                 } else if (sel == "connection status") {
-                  final bool result = await PrintBluetoothThermal.connectionStatus;
+                  final bool result =
+                      await PrintBluetoothThermal.connectionStatus;
                   connected = result;
                   setState(() {
                     _info = "connection status: $result";
@@ -115,36 +124,142 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        this.getBluetoots();
-                      },
-                      child: Row(
-                        children: [
-                          Visibility(
-                            visible: _progress,
-                            child: SizedBox(
-                              width: 25,
-                              height: 25,
-                              child: CircularProgressIndicator.adaptive(strokeWidth: 1, backgroundColor: Colors.white),
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            this.getBluetoots();
+                          },
+                          child: Row(
+                            children: [
+                              Visibility(
+                                visible: _progress,
+                                child: SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: CircularProgressIndicator.adaptive(
+                                      strokeWidth: 1,
+                                      backgroundColor: Colors.white),
+                                ),
+                              ),
+                              SizedBox(width: 5),
+                              Text(_progress ? _msjprogress : "Search"),
+                            ],
                           ),
-                          SizedBox(width: 5),
-                          Text(_progress ? _msjprogress : "Search"),
-                        ],
+                        ),
+                        ElevatedButton(
+                          onPressed: connected ? this.disconnect : null,
+                          child: Text("Disconnect"),
+                        ),
+                        ElevatedButton(
+                          onPressed: connected ? this.printTest : null,
+                          child: Text("Test"),
+                        ),
+                      ],
+                    ),
+                    RepaintBoundary(
+                      key: _localKey,
+                      child: Container(
+                        color: Colors.white,
+                        child: SizedBox(
+                          width: optionprinttype == '80 mm'
+                              ? PaperSize.mm80.width.toDouble()
+                              : PaperSize.mm58.width.toDouble(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 36,
+                                ),
+                                child: const FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: Text(
+                                    'PURCHASE RECEIPT',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Divider(thickness: 2),
+                              Table(
+                                columnWidths: const {
+                                  1: IntrinsicColumnWidth(),
+                                },
+                                children: const [
+                                  TableRow(
+                                    children: [
+                                      Text('បាយស'),
+                                      Text(r'$2'),
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      Text('គុយទាវទឹក'),
+                                      Text(r'$2.9'),
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      Text('គុយទាវអត់ទឹក'),
+                                      Text(r'$15.9'),
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      Text('កូយទាវអត់សាច់'),
+                                      Text(r'$2'),
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      Text('CAPPUCINO MEDIUM SIZE'),
+                                      Text(r'$2.9'),
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      Text('BEEF PIZZA'),
+                                      Text(r'$15.9'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const Divider(thickness: 2),
+                              const FittedBox(
+                                fit: BoxFit.cover,
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'សរុប',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                    SizedBox(width: 16),
+                                    Text(
+                                      r'$200',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Divider(thickness: 2),
+                              const Text('Thank you for your purchase!'),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: connected ? this.disconnect : null,
-                      child: Text("Disconnect"),
-                    ),
-                    ElevatedButton(
-                      onPressed: connected ? this.printTest : null,
-                      child: Text("Test"),
-                    ),
+                    )
                   ],
                 ),
                 Container(
@@ -162,7 +277,8 @@ class _MyAppState extends State<MyApp> {
                             this.connect(mac);
                           },
                           title: Text('Name: ${items[index].name}'),
-                          subtitle: Text("macAddress: ${items[index].macAdress}"),
+                          subtitle:
+                              Text("macAddress: ${items[index].macAdress}"),
                         );
                       },
                     )),
@@ -174,7 +290,8 @@ class _MyAppState extends State<MyApp> {
                     color: Colors.grey.withOpacity(0.3),
                   ),
                   child: Column(children: [
-                    Text("Text size without the library without external packets, print images still it should not use a library"),
+                    Text(
+                        "Text size without the library without external packets, print images still it should not use a library"),
                     SizedBox(height: 10),
                     Row(
                       children: [
@@ -191,7 +308,8 @@ class _MyAppState extends State<MyApp> {
                         DropdownButton<String>(
                           hint: Text('Size'),
                           value: _selectSize,
-                          items: <String>['1', '2', '3', '4', '5'].map((String value) {
+                          items: <String>['1', '2', '3', '4', '5']
+                              .map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
                               child: new Text(value),
@@ -256,8 +374,8 @@ class _MyAppState extends State<MyApp> {
       _msjprogress = "Wait";
       items = [];
     });
-    final List<BluetoothInfo> listResult = await PrintBluetoothThermal.pairedBluetooths;
-
+    final List<BluetoothInfo> listResult =
+        await PrintBluetoothThermal.pairedBluetooths;
     /*await Future.forEach(listResult, (BluetoothInfo bluetooth) {
       String name = bluetooth.name;
       String mac = bluetooth.macAdress;
@@ -268,7 +386,8 @@ class _MyAppState extends State<MyApp> {
     });
 
     if (listResult.length == 0) {
-      _msj = "There are no bluetoohs linked, go to settings and link the printer";
+      _msj =
+          "There are no bluetoohs linked, go to settings and link the printer";
     } else {
       _msj = "Touch an item in the list to connect";
     }
@@ -284,7 +403,8 @@ class _MyAppState extends State<MyApp> {
       _msjprogress = "Connecting...";
       connected = false;
     });
-    final bool result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
+    final bool result =
+        await PrintBluetoothThermal.connect(macPrinterAddress: mac);
     print("state conected $result");
     if (result) connected = true;
     setState(() {
@@ -334,9 +454,12 @@ class _MyAppState extends State<MyApp> {
       await PrintBluetoothThermal.writeBytes(enter.codeUnits);
       //size of 1-5
       String text = "Hello";
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 1, text: text));
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 2, text: text + " size 2"));
-      await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: 3, text: text + " size 3"));
+      await PrintBluetoothThermal.writeString(
+          printText: PrintTextSize(size: 1, text: text));
+      await PrintBluetoothThermal.writeString(
+          printText: PrintTextSize(size: 2, text: text + " size 2"));
+      await PrintBluetoothThermal.writeString(
+          printText: PrintTextSize(size: 3, text: text + " size 3"));
     } else {
       //desconectado
       print("desconectado bluetooth $conexionStatus");
@@ -347,90 +470,121 @@ class _MyAppState extends State<MyApp> {
     List<int> bytes = [];
     // Using default profile
     final profile = await CapabilityProfile.load();
-    final generator = Generator(optionprinttype == "58 mm" ? PaperSize.mm58 : PaperSize.mm80, profile);
+    final generator = Generator(
+        optionprinttype == '80 mm' ? PaperSize.mm80 : PaperSize.mm58, profile);
     //bytes += generator.setGlobalFont(PosFontType.fontA);
     bytes += generator.reset();
 
-    final ByteData data = await rootBundle.load('assets/mylogo.jpg');
-    final Uint8List bytesImg = data.buffer.asUint8List();
+    // final ByteData data = await rootBundle.load('assets/mylogo.jpg');
+    // final Uint8List bytesImg = data.buffer.asUint8List();
+    // final img.Image? image = img.decodeImage(bytesImg);
+
+    final RenderRepaintBoundary boundary =
+        _localKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+
+    final screenWidth = boundary.size.width;
+    double quality = (optionprinttype == '80 mm'
+            ? PaperSize.mm80.width
+            : PaperSize.mm58.width) /
+        screenWidth;
+
+    final toImage = await boundary.toImage(pixelRatio: quality);
+    final byteData = await toImage.toByteData(format: ImageByteFormat.png);
+    final Uint8List bytesImg = byteData!.buffer.asUint8List();
     img.Image? image = img.decodeImage(bytesImg);
 
-    if (Platform.isIOS) {
-      // Resizes the image to half its original size and reduces the quality to 80%
-      final resizedImage = img.copyResize(image!, width: image.width ~/ 1.3, height: image.height ~/ 1.3, interpolation: img.Interpolation.nearest);
-      final bytesimg = Uint8List.fromList(img.encodeJpg(resizedImage));
-      //image = img.decodeImage(bytesimg);
-    }
+    // if (Platform.isIOS) {
+    //   // Resizes the image to half its original size and reduces the quality to 80%
+    //   final resizedImage = img.copyResize(image!,
+    //       width: image.width ~/ 1.3,
+    //       height: image.height ~/ 1.3,
+    //       interpolation: img.Interpolation.nearest);
+    //   final bytesimg = Uint8List.fromList(img.encodeJpg(resizedImage));
+    //   //image = img.decodeImage(bytesimg);
+    // }
 
     //Using `ESC *`
-    //bytes += generator.image(image!);
+    bytes += generator.image(image!);
+    // Using `GS v 0` (obsolete)
+    // generator.imageRaster(image);
+// Using `GS ( L`
+    // generator.imageRaster(image!,
+    //     imageFn: PosImageFn.graphics); // , imageFn: PosImageFn.graphics
 
-    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ', styles: PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text('Special 2: blåbærgrød', styles: PosStyles(codeTable: 'CP1252'));
+    // bytes += generator.text(
+    //     'Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
+    // bytes += generator.text('Special 1: ñÑ àÀ èÈ éÉ üÜ çÇ ôÔ',
+    //     styles: PosStyles(codeTable: 'CP1252'));
+    // bytes += generator.text('Special 2: blåbærgrød',
+    //     styles: PosStyles(codeTable: 'CP1252'));
 
-    bytes += generator.text('Bold text', styles: PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
-    bytes += generator.text('Underlined text', styles: PosStyles(underline: true), linesAfter: 1);
-    bytes += generator.text('Align left', styles: PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right', styles: PosStyles(align: PosAlign.right), linesAfter: 1);
+    // bytes += generator.text('Bold text', styles: PosStyles(bold: true));
+    // bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
+    // bytes += generator.text('Underlined text',
+    //     styles: PosStyles(underline: true), linesAfter: 1);
+    // bytes +=
+    //     generator.text('Align left', styles: PosStyles(align: PosAlign.left));
+    // bytes += generator.text('Align center',
+    //     styles: PosStyles(align: PosAlign.center));
+    // bytes += generator.text('Align right',
+    //     styles: PosStyles(align: PosAlign.right), linesAfter: 1);
 
-    bytes += generator.row([
-      PosColumn(
-        text: 'col3',
-        width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-      PosColumn(
-        text: 'col6',
-        width: 6,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-      PosColumn(
-        text: 'col3',
-        width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-    ]);
+    // bytes += generator.row([
+    //   PosColumn(
+    //     text: 'col3',
+    //     width: 3,
+    //     styles: PosStyles(align: PosAlign.center, underline: true),
+    //   ),
+    //   PosColumn(
+    //     text: 'col6',
+    //     width: 6,
+    //     styles: PosStyles(align: PosAlign.center, underline: true),
+    //   ),
+    //   PosColumn(
+    //     text: 'col3',
+    //     width: 3,
+    //     styles: PosStyles(align: PosAlign.center, underline: true),
+    //   ),
+    // ]);
 
-    //barcode
+    // //barcode
 
-    final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
-    bytes += generator.barcode(Barcode.upcA(barData));
+    // final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
+    // bytes += generator.barcode(Barcode.upcA(barData));
 
-    //QR code
-    bytes += generator.qrcode('example.com');
+    // //QR code
+    // bytes += generator.qrcode('example.com');
 
-    bytes += generator.text(
-      'Text size 50%',
-      styles: PosStyles(
-        fontType: PosFontType.fontB,
-      ),
-    );
-    bytes += generator.text(
-      'Text size 100%',
-      styles: PosStyles(
-        fontType: PosFontType.fontA,
-      ),
-    );
-    bytes += generator.text(
-      'Text size 200%',
-      styles: PosStyles(
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
-      ),
-    );
+    // bytes += generator.text(
+    //   'Text size 50%',
+    //   styles: PosStyles(
+    //     fontType: PosFontType.fontB,
+    //   ),
+    // );
+    // bytes += generator.text(
+    //   'Text size 100%',
+    //   styles: PosStyles(
+    //     fontType: PosFontType.fontA,
+    //   ),
+    // );
+    // bytes += generator.text(
+    //   'Text size 200%',
+    //   styles: PosStyles(
+    //     height: PosTextSize.size2,
+    //     width: PosTextSize.size2,
+    //   ),
+    // );
 
     bytes += generator.feed(2);
-    //bytes += generator.cut();
+    bytes += generator.cut();
     return bytes;
   }
 
   Future<List<int>> testWindows() async {
     List<int> bytes = [];
 
-    bytes += PostCode.text(text: "Size compressed", fontSize: FontSize.compressed);
+    bytes +=
+        PostCode.text(text: "Size compressed", fontSize: FontSize.compressed);
     bytes += PostCode.text(text: "Size normal", fontSize: FontSize.normal);
     bytes += PostCode.text(text: "Bold", bold: true);
     bytes += PostCode.text(text: "Inverse", inverse: true);
@@ -439,9 +593,15 @@ class _MyAppState extends State<MyApp> {
     bytes += PostCode.enter();
 
     //List of rows
-    bytes += PostCode.row(texts: ["PRODUCT", "VALUE"], proportions: [60, 40], fontSize: FontSize.compressed);
+    bytes += PostCode.row(
+        texts: ["PRODUCT", "VALUE"],
+        proportions: [60, 40],
+        fontSize: FontSize.compressed);
     for (int i = 0; i < 3; i++) {
-      bytes += PostCode.row(texts: ["Item $i", "$i,00"], proportions: [60, 40], fontSize: FontSize.compressed);
+      bytes += PostCode.row(
+          texts: ["Item $i", "$i,00"],
+          proportions: [60, 40],
+          fontSize: FontSize.compressed);
     }
 
     bytes += PostCode.line();
@@ -459,7 +619,8 @@ class _MyAppState extends State<MyApp> {
     bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
     if (connectionStatus) {
       String text = _txtText.text.toString() + "\n";
-      bool result = await PrintBluetoothThermal.writeString(printText: PrintTextSize(size: int.parse(_selectSize), text: text));
+      bool result = await PrintBluetoothThermal.writeString(
+          printText: PrintTextSize(size: int.parse(_selectSize), text: text));
       print("status print result: $result");
       setState(() {
         _msj = "printed status: $result";
